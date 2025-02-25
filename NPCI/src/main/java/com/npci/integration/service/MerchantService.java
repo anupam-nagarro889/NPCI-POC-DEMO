@@ -4,10 +4,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.npci.integration.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.npci.integration.exception.ResourceNotFoundException;
 import com.npci.integration.models.Merchant;
 import com.npci.integration.repository.MerchantRepository;
 
@@ -43,8 +43,7 @@ public class MerchantService {
 		
 		merch.setId(id);
 		merch.setName(merchant.getName());
-		merch.setCategory(merchant.getCategory());
-		final Merchant updatedMerchant = repository.save(merch); 
+		final Merchant updatedMerchant = repository.save(merch);
 		return updatedMerchant;
 		
 	}
@@ -60,5 +59,14 @@ public class MerchantService {
 		return response;
 		
 	}
+
+/*	@Cacheable(value = "merchantBhai", key = "#id")
+	public Merchant getMerchantByIdFromAutoCache(Long id) throws ResourceNotFoundException{
+		Merchant merchant = repository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Merchant not found for this id :: " + id));
+
+		System.out.println("Printing from database.");
+		return merchant;
+	}*/
 
 }

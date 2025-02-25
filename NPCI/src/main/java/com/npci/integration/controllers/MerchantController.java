@@ -3,6 +3,7 @@ package com.npci.integration.controllers;
 import java.util.List;
 import java.util.Map;
 
+import com.npci.integration.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,8 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.npci.integration.dao.MerchantDao;
-import com.npci.integration.exception.ResourceNotFoundException;
 import com.npci.integration.models.Merchant;
 import com.npci.integration.service.MerchantService;
 import com.npci.integration.service.RedisService;
@@ -23,31 +22,22 @@ import com.npci.integration.service.RedisService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/rest/service/merchant")
+@RequestMapping("/rest/service/merchant/api")
 public class MerchantController {
 
-	@Autowired
-	private MerchantDao merchantDao;
-	
 	@Autowired
 	private RedisService redisService;
 
 	@Autowired
 	private MerchantService merchantService;
 
-	@GetMapping("/api/creatTable")
-	public void creatTableInDB() {
-		this.merchantDao.creatTable();
-
-	}
-
-	@GetMapping("/api/getAllMerchants")
+	@GetMapping("/getAllMerchants")
 	public List<Merchant> getMerchants() {
 		return merchantService.getAllMerchant();
 
 	}
 
-	@GetMapping("/api/getMerchant/{id}")
+	@GetMapping("/getMerchant/{id}")
 	public ResponseEntity<Merchant> getMerchantById(@PathVariable(value = "id") Long id)
 			throws ResourceNotFoundException {
      Merchant merchant = redisService.get(id, Merchant.class);
@@ -65,22 +55,22 @@ public class MerchantController {
      }
 	}
 
-	@PostMapping("/api/addMerchant")
+	@PostMapping("/addMerchant")
 	public Merchant addMerchant(@Valid @RequestBody Merchant merchant) {
 		return merchantService.addMerchantDetails(merchant);
 	}
 	
-	@PutMapping("/api/updateMerchant/{id}")
+	@PutMapping("/updateMerchant/{id}")
 	public ResponseEntity<Merchant> updateMerchantDetails(@PathVariable(value = "id") Long id,
 			@Valid @RequestBody Merchant merchant) throws ResourceNotFoundException {
 		return ResponseEntity.ok(merchantService.updateMerchantData(id, merchant));
-		
 	}
 	
-	@DeleteMapping("/api/deleteMerchant/{id}")
+	@DeleteMapping("/deleteMerchant/{id}")
 	public Map<String, Boolean> deleteMerchant(@PathVariable(value = "id") Long Id) throws ResourceNotFoundException {
 		return merchantService.deleteMerchant(Id);
 		
 	}
+
 
 }

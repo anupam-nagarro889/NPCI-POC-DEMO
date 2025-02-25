@@ -7,47 +7,35 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import java.io.Serializable;
+
+import lombok.*;
+
+import java.time.LocalDateTime;
+
 @Entity
-@Table(name = "merchant")
-public class Merchant {
-	
-	private Long id;
-	
-	private String name;
-	
-	private String category;
+@Table(name = "merchants")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Merchant implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	public Long getId() {
-		return id;
-	}
+	private Long id;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+	@Column(nullable = false, unique = true)
+	private String merchantCode;
 
-	@Column(name = "name" , nullable = false)
-	public String getName() {
-		return name;
-	}
+	@Column(nullable = false)
+	private String name;
 
-	public void setName(String name) {
-		this.name = name;
-	}
+	@Column(nullable = false)
+	private String callbackUrl;
 
-	@Column(name = "category", nullable = false)
-	public String getCategory() {
-		return category;
-	}
-
-	public void setCategory(String category) {
-		this.category = category;
-	}
-	
-	@Override
-	public String toString() {
-		return "Merchant [id=" + id + ", name=" + name + ", category=" + category + "]";
-	}
-
+	@Column(nullable = false, updatable = false)
+	private LocalDateTime createdAt = LocalDateTime.now();
 }
+
