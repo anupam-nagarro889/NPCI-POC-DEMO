@@ -3,6 +3,7 @@ package com.npci.integration.controllers;
 import java.util.List;
 import java.util.Map;
 
+import com.npci.integration.dto.MerchantDTO;
 import com.npci.integration.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -32,38 +33,25 @@ public class MerchantController {
 	private MerchantService merchantService;
 
 	@GetMapping("/getAllMerchants")
-	public List<Merchant> getMerchants() {
+	public List<MerchantDTO> getMerchants() {
 		return merchantService.getAllMerchant();
 
 	}
 
 	@GetMapping("/getMerchant/{id}")
-	public ResponseEntity<Merchant> getMerchantById(@PathVariable(value = "id") Long id)
+	public ResponseEntity<MerchantDTO> getMerchantById(@PathVariable(value = "id") Long id)
 			throws ResourceNotFoundException {
-     Merchant merchant = redisService.get(id, Merchant.class);
-     if(merchant != null) {
-    	 System.out.println("Retrieving data from redis...");
-    	 return ResponseEntity.ok().body(merchant);
-		
-     }else {
-    	 
-    	 Merchant merchant2 = merchantService.getMerchantByID(id);
-    	 System.out.println("Retreivng data from database...");
-    	 redisService.set(id, merchant2, 500l);
-    	 
-    	 return ResponseEntity.ok().body(merchant2);
-     }
+		return ResponseEntity.ok(merchantService.getMerchantByID(id));
 	}
 
 	@PostMapping("/addMerchant")
-	public Merchant addMerchant(@Valid @RequestBody Merchant merchant) {
-		return merchantService.addMerchantDetails(merchant);
+	public MerchantDTO addMerchant(@Valid @RequestBody MerchantDTO merchantDTO) {
+		return merchantService.addMerchantDetails(merchantDTO);
 	}
 	
-	@PutMapping("/updateMerchant/{id}")
-	public ResponseEntity<Merchant> updateMerchantDetails(@PathVariable(value = "id") Long id,
-			@Valid @RequestBody Merchant merchant) throws ResourceNotFoundException {
-		return ResponseEntity.ok(merchantService.updateMerchantData(id, merchant));
+	@PutMapping("/updateMerchant")
+	public ResponseEntity<MerchantDTO> updateMerchantDetails(@Valid @RequestBody MerchantDTO merchantDTO) throws ResourceNotFoundException {
+		return ResponseEntity.ok(merchantService.updateMerchantData(merchantDTO));
 	}
 	
 	@DeleteMapping("/deleteMerchant/{id}")

@@ -6,32 +6,37 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 @Service
 public class RedisService {
-	
-	@Autowired
-    private RedisTemplate redisTemplate;
 
-    public <T> T get(Long key, Class<T> entityClass) {
-        try {
-            Object o = redisTemplate.opsForValue().get(key.toString());
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(o.toString(), entityClass);
-        } catch (Exception e) {
-            System.out.println("Exception " + e);
-            return null;
-        }
-    }
+        @Autowired
+        private RedisTemplate<String, Object> redisTemplate;
 
-    public void set(Long key, Object o, Long ttl) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            String jsonValue = objectMapper.writeValueAsString(o);
-            redisTemplate.opsForValue().set(key.toString(), jsonValue, ttl, TimeUnit.SECONDS);
-        } catch (Exception e) {
-        	System.out.println("Exception " + e);
+        public <T> T get(String key, Class<T> entityClass) {
+            try {
+                Object object = redisTemplate.opsForValue().get(key);
+                return entityClass.cast(object);  // Direct casting instead of JSON deserialization
+            } catch (Exception e) {
+                System.err.println("Exception in get: " + e);
+                return null;
+            }
         }
-    }
+
+        public void set(String key, Object value, Long ttl) {
+            try {
+                redisTemplate.opsForValue().set(key, value, ttl, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                System.err.println("Exception in set: " + e);
+            }
+        }
+
+        public void delete(String key) {
+            try {
+                redisTemplate.delete(key);
+            } catch (Exception e) {
+                System.err.println("Exception in delete: " + e);
+            }
+        }
+
 
 }

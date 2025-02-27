@@ -1,7 +1,9 @@
 package com.npci.integration.dto;
 
+import com.npci.integration.models.Transactions;
 import lombok.*;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -12,8 +14,8 @@ import java.time.LocalDateTime;
 @Builder
 public class TransactionDTO {
     private String transactionId;
-    private String fromMerchantCode;
-    private String toMerchantCode;
+    private String fromMerchant;
+    private String toMerchant;
     private BigDecimal amount;
     private String currency;
     private String status;
@@ -21,5 +23,6 @@ public class TransactionDTO {
     private LocalDateTime initiatedAt;
     private LocalDateTime completedAt;
     private String failureReason;
+
 }
 

@@ -1,16 +1,25 @@
 package com.npci.integration.service;
 
+import com.npci.integration.models.PaymentGateway;
 import com.npci.integration.models.TransactionStatus;
 import com.npci.integration.models.Transactions;
 import com.npci.integration.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class PaymentService {
 
     @Autowired
     TransactionRepository transactionRepository;
+
+    @Autowired
+    RestTemplate restTemplate;
 
     public Boolean processPayment(Transactions transaction) {
 
@@ -38,4 +47,28 @@ public class PaymentService {
         }*/
         return true;
     }
+
+    private boolean callPaymentGateway (Transactions transaction, PaymentGateway gateway){
+        try {
+            String gatewayUrl = gateway.getApiUrl() + "/processPayment";
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("transactionId", transaction.getTransactionId());
+            requestBody.put("amount", transaction.getAmount());
+            requestBody.put("currency", transaction.getCurrency());
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
+
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    gatewayUrl, HttpMethod.POST, requestEntity, Map.class
+            );
+
+            return response.getStatusCode() == HttpStatus.OK && "SUCCESS".equals(response.getBody().get("status"));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }
