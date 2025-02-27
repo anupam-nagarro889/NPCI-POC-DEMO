@@ -1,5 +1,6 @@
 package com.npci.integration.service;
 
+import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.npci.integration.dto.TransactionDTO;
 import com.npci.integration.exception.ResourceNotFoundException;
 import com.npci.integration.models.*;
@@ -8,6 +9,7 @@ import com.npci.integration.repository.PaymentGatewayRepository;
 import com.npci.integration.repository.TransactionLogRepository;
 import com.npci.integration.repository.TransactionRepository;
 import org.apache.coyote.BadRequestException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -27,6 +29,12 @@ public class TransactionService {
     private final RestTemplate restTemplate;
     private final TransactionLogRepository transactionLogRepository;
 
+    @Autowired
+    PaymentService paymentService;
+
+    @Autowired
+    NotificationService notificationService;
+
 
     public TransactionService(TransactionRepository transactionRepository, MerchantRepository merchantRepository, PaymentGatewayRepository paymentGatewayRepository, RestTemplate restTemplate, TransactionLogRepository transactionLogRepository) {
         this.transactionRepository = transactionRepository;
@@ -36,7 +44,7 @@ public class TransactionService {
         this.transactionLogRepository = transactionLogRepository;
     }
 
-    public String initiateTransaction(TransactionDTO transactionDTO) throws BadRequestException {
+    public Map<String,String> initiateTransaction(TransactionDTO transactionDTO) throws BadRequestException {
         // Validate request data
         if (transactionDTO.getAmount() == null || transactionDTO.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new BadRequestException("Please enter a valid amount");
@@ -57,7 +65,26 @@ public class TransactionService {
         String transactionId = UUID.randomUUID().toString();
 
         // Create transaction entity
-        Transactions transaction = Transactions.builder()
+        Transactions transaction =  createTransactionEntity(transactionId,fromMerchant,toMerchant,transactionDTO);
+
+        transactionRepository.save(transaction);
+        boolean isPaymentCompleted = paymentService.processPayment(transaction);
+        if (isPaymentCompleted) {
+            completeTransaction(transaction);
+        } else {
+            failTransaction(transaction, "Payment gateway processing failed.");
+        }
+
+
+    Map<String,String> response = new HashMap<>();
+        response.put("Message","Transaction successfully completed..." );
+        response.put("Transaction id: ", transactionId);
+        //return  "Transaction has been successfully completed with id : " +  transaction.getTransactionId();
+    return response;
+    }
+
+    private Transactions createTransactionEntity(String transactionId,Merchant fromMerchant,Merchant toMerchant,TransactionDTO transactionDTO){
+        Transactions transactions = Transactions.builder()
                 .transactionId(transactionId)
                 .fromMerchant(fromMerchant)
                 .toMerchant(toMerchant)
@@ -67,38 +94,10 @@ public class TransactionService {
                 .referenceId(transactionDTO.getReferenceId())
                 .initiatedAt(LocalDateTime.now())
                 .build();
-
-        transactionRepository.save(transaction);
-        processPayment(transaction);
-        // Return success response
-        return transaction.getTransactionId();
+        return  transactions;
     }
 
-    private void processPayment(Transactions transaction) {
 
-        // Select best gateway (Mock logic: choose any available gateway)
-   /*     Optional<PaymentGateway> gatewayOpt = paymentGatewayRepository.findAll().stream().findFirst();
-        if (gatewayOpt.isEmpty()) {
-            failTransaction(transaction, "No available payment gateway.");
-            return;
-        }
-
-        PaymentGateway gateway = gatewayOpt.get();*/
-        transaction.setStatus(TransactionStatus.PROCESSING);
-        transactionRepository.save(transaction);
-
-        // Store log entry
-//        storeTransactionLog(transaction, LogStatus.FORWARDED, "Payment sent to gateway: " + gateway.getGatewayName());
-
-        // Call payment gateway API
-//        boolean paymentSuccess = callPaymentGateway(transaction, gateway);
-
-        if (true) {
-            completeTransaction(transaction);
-        } else {
-            failTransaction(transaction, "Payment gateway processing failed.");
-        }
-    }
 
     private boolean callPaymentGateway(Transactions transaction, PaymentGateway gateway) {
         try {
@@ -132,8 +131,8 @@ public class TransactionService {
         storeTransactionLog(transaction, LogStatus.COMPLETED, "Transaction completed successfully.");
 
         // Notify both merchants
-        notifyMerchant(transaction.getFromMerchant(), transaction, "Transaction successful.");
-        notifyMerchant(transaction.getToMerchant(), transaction, "Transaction successful.");
+        notificationService.notifyMerchant(transaction.getFromMerchant(), transaction, "Transaction successful.");
+        notificationService.notifyMerchant(transaction.getToMerchant(), transaction, "Transaction successful.");
     }
 
     private void failTransaction(Transactions transaction, String reason) {
@@ -146,8 +145,8 @@ public class TransactionService {
         storeTransactionLog(transaction, LogStatus.FAILED, "Transaction failed: " + reason);
 
         // Notify both merchants
-        notifyMerchant(transaction.getFromMerchant(), transaction, "Transaction failed: " + reason);
-        notifyMerchant(transaction.getToMerchant(), transaction, "Transaction failed: " + reason);
+        notificationService.notifyMerchant(transaction.getFromMerchant(), transaction, "Transaction failed: " + reason);
+        notificationService.notifyMerchant(transaction.getToMerchant(), transaction, "Transaction failed: " + reason);
     }
 
     private void storeTransactionLog(Transactions transaction, LogStatus status, String message) {
@@ -160,21 +159,5 @@ public class TransactionService {
         transactionLogRepository.save(log);
     }
 
-    private void notifyMerchant(Merchant merchant, Transactions transaction, String message) {
-        try {
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("transactionId", transaction.getTransactionId());
-            payload.put("status", transaction.getStatus().toString());
-            payload.put("message", message);
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(payload, headers);
-            System.out.println("Success to notify merchant: " + merchant.getMerchantCode());
-
-//            restTemplate.exchange(merchant.getCallbackUrl(), HttpMethod.POST, requestEntity, Void.class);
-        } catch (Exception e) {
-            System.out.println("Failed to notify merchant: " + merchant.getMerchantCode());
-        }
-    }
 }
