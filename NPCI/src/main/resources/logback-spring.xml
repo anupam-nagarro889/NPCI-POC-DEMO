@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Define Log Path -->
+    <property name="LOG_PATH" value="C:\NOT_CURAM\NPCI_POC\NPCI-POC-DEMO\NPCI\logs"/>
+    <property name="LOG_LEVEL" value="INFO"/>
+    <!-- Console Appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread]
+                %black(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] %yellow(%C{1}.%M): %msg%n%throwable           \
+            </pattern>
+        </encoder>
+    </appender>
+
+    <!-- File Appender with Size-Based Rollover -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- Define file name pattern with date -->
+            <fileNamePattern>${LOG_PATH}/npciapp-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <!-- Rollover file when it reaches 5MB -->
+            <maxFileSize>5MB</maxFileSize>
+
+            <!-- Keep logs for 30 days -->
+            <maxHistory>30</maxHistory>
+
+            <!-- Optional: Limit total log file size -->
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>UTF-8</charset>
+            <immediateFlush>true</immediateFlush>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36}.%M - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Root Logger -->
+    <root level="${LOG_LEVEL}">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+
+</configuration>

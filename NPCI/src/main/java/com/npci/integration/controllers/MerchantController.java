@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.npci.integration.dto.MerchantDTO;
 import com.npci.integration.exception.ResourceNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,6 +25,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/rest/service/merchant/api")
+@Slf4j
 public class MerchantController {
 
 	@Autowired
@@ -34,6 +36,7 @@ public class MerchantController {
 
 	@GetMapping("/getAllMerchants")
 	public List<MerchantDTO> getMerchants() {
+		log.info("Returning all Merchants");
 		return merchantService.getAllMerchant();
 
 	}
@@ -41,21 +44,25 @@ public class MerchantController {
 	@GetMapping("/getMerchant/{id}")
 	public ResponseEntity<MerchantDTO> getMerchantById(@PathVariable(value = "id") Long id)
 			throws ResourceNotFoundException {
+		log.info("Getting Merchant by Id");
 		return ResponseEntity.ok(merchantService.getMerchantByID(id));
 	}
 
 	@PostMapping("/addMerchant")
 	public MerchantDTO addMerchant(@Valid @RequestBody MerchantDTO merchantDTO) {
+		log.info("Adding a new Merchant");
 		return merchantService.addMerchantDetails(merchantDTO);
 	}
 	
 	@PutMapping("/updateMerchant")
 	public ResponseEntity<MerchantDTO> updateMerchantDetails(@Valid @RequestBody MerchantDTO merchantDTO) throws ResourceNotFoundException {
+		log.info("Updating a Merchant");
 		return ResponseEntity.ok(merchantService.updateMerchantData(merchantDTO));
 	}
 	
 	@DeleteMapping("/deleteMerchant/{id}")
 	public Map<String, Boolean> deleteMerchant(@PathVariable(value = "id") Long Id) throws ResourceNotFoundException {
+		log.info("Deleting a Merchant");
 		return merchantService.deleteMerchant(Id);
 		
 	}

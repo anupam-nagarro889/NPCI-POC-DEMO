@@ -4,6 +4,7 @@ import com.npci.integration.models.PaymentGateway;
 import com.npci.integration.models.TransactionStatus;
 import com.npci.integration.models.Transactions;
 import com.npci.integration.repository.TransactionRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class PaymentService {
 
@@ -32,6 +34,7 @@ public class PaymentService {
 
         PaymentGateway gateway = gatewayOpt.get();*/
         transaction.setStatus(TransactionStatus.PROCESSING);
+        log.info("Updating transaction status to processing");
         transactionRepository.save(transaction);
 
         // Store log entry
@@ -61,6 +64,7 @@ public class PaymentService {
 
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
 
+            log.info("Calling payment gateway");
             ResponseEntity<Map> response = restTemplate.exchange(
                     gatewayUrl, HttpMethod.POST, requestEntity, Map.class
             );

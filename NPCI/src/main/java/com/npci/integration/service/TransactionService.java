@@ -10,6 +10,7 @@ import com.npci.integration.repository.MerchantRepository;
 import com.npci.integration.repository.PaymentGatewayRepository;
 import com.npci.integration.repository.TransactionLogRepository;
 import com.npci.integration.repository.TransactionRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -21,6 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class TransactionService {
 
@@ -44,6 +46,7 @@ public class TransactionService {
 
     public Map<String, String> initiateTransaction (TransactionDTO transactionDTO) throws BadRequestException {
         // Validate request data
+        log.info("Initiating a transaction");
         if (transactionDTO.getAmount() == null || transactionDTO.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new BadRequestException("Please enter a valid amount");
         }
@@ -59,6 +62,7 @@ public class TransactionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Receiver merchant not found"));
 
         // Generate unique transaction ID
+        log.info("Generating a transaction ID");
         String transactionId = UUID.randomUUID().toString();
 
         // Create transaction entity
@@ -68,11 +72,13 @@ public class TransactionService {
         boolean isPaymentCompleted = paymentService.processPayment(transaction);
 
         if (isPaymentCompleted) {
+            log.info("Transaction completed.");
             completeTransaction(transaction);
         } else {
+            log.info("Transaction Failed.");
             failTransaction(transaction, "Payment gateway processing failed.");
         }
-
+        log.info("Creating transaction cache.");
         redisService.set(transaction.getTransactionId(), transaction, 500L);
 
         Map<String, String> response = new HashMap<>();
@@ -124,6 +130,7 @@ public class TransactionService {
     }
 
     private void storeTransactionLog (Transactions transaction, LogStatus status, String message){
+        log.info("Storing transaction audit logs.");
         TransactionLog log = TransactionLog.builder()
                 .transaction(transaction)
                 .status(status)
@@ -136,10 +143,10 @@ public class TransactionService {
     public TransactionDTO getTransaction(String transactionId) {
         Transactions transactions = redisService.get(transactionId, Transactions.class);
         if(transactions != null){
-            System.out.println("Fetching from Redis...");
+            log.info("Fetching from redis.");
             return transactionMapper.transactionToTransactionDto(transactions);
         }else{
-            System.out.println("Fetching from Database...");
+            log.info("Fetching from Database...");
             Transactions transaction = transactionRepository.findByTransactionId(transactionId)
                     .orElseThrow(() -> new RuntimeException("Transaction not found"));
             redisService.set(transactionId, transaction, 500L);
@@ -149,6 +156,7 @@ public class TransactionService {
     }
 
     public List<TransactionDTO> getAllTransactions() {
+        log.info("Getting all transaction");
         List<Transactions> transactionList = transactionRepository.findAll();
         return transactionMapper.transactionToDtoList(transactionList);
     }
@@ -158,6 +166,7 @@ public class TransactionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
         redisService.delete(transactionId);
         transaction.setStatus(TransactionStatus.DELETED);
+        log.info("Deleting transaction");
         transactionRepository.save(transaction);
     }
 

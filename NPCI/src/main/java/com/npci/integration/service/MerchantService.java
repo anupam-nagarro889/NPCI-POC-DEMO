@@ -7,6 +7,7 @@ import java.util.Map;
 import com.npci.integration.dto.MerchantDTO;
 import com.npci.integration.exception.ResourceNotFoundException;
 import com.npci.integration.mapper.MerchantMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import com.npci.integration.models.Merchant;
 import com.npci.integration.repository.MerchantRepository;
 
+@Slf4j
 @Service
 public class MerchantService {
 	
@@ -34,13 +36,13 @@ public class MerchantService {
 
 		Merchant merchant = redisService.get(id.toString(), Merchant.class);
 		if(merchant != null) {
-			System.out.println("Retrieving data from redis...");
+			log.info("Fetching data from Redis.");
 			return merchantMapper.merchantToMerchantDto(merchant);
 		}else {
 			merchant = repository.findById(id)
 					.orElseThrow(() -> new ResourceNotFoundException("Merchant not found for this id :: " + id));
 
-			System.out.println("Retreivng data from database...");
+			log.info("Fetching data from database");
 			redisService.set(id.toString(), merchant, 500L);
 			return merchantMapper.merchantToMerchantDto(merchant);
 		}
@@ -49,6 +51,7 @@ public class MerchantService {
 	
 	public MerchantDTO addMerchantDetails(MerchantDTO merchantDto) {
 		Merchant merchant = merchantMapper.merchantDtoToMerchant(merchantDto);
+		log.info("Adding a new Merchant.");
 		repository.save(merchant);
 		//Adding to cache
 		redisService.set(merchant.getId().toString(), merchant, 500L);
@@ -63,13 +66,14 @@ public class MerchantService {
 		merchantDetails.setName(merchantDto.getName());
 		merchantDetails.setCallbackUrl(merchantDto.getCallbackUrl());
 
+		log.info("Updating a new Merchant.");
 		Merchant updatedMerchant = repository.save(merchantDetails);
 
 		// Update Redis cache
 		redisService.delete(merchantDto.getId().toString());
 		redisService.set(merchantDto.getId().toString(), updatedMerchant, 500L);
 
-		System.out.println("Updated Merchant and refreshed Redis cache.");
+		log.info("Updated Merchant and refreshed Redis cache.");
 		return merchantMapper.merchantToMerchantDto(updatedMerchant);
 		
 	}
@@ -78,7 +82,8 @@ public class MerchantService {
 		
 		Merchant merchant = repository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Merchant not found for this id :: " + id));
-		
+
+		log.info("Deleting a Merchant.");
 		repository.delete(merchant);
 
 		//Delete the cache
@@ -88,5 +93,7 @@ public class MerchantService {
 		return response;
 		
 	}
+
+
 
 }
