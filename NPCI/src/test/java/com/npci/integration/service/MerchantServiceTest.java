@@ -10,9 +10,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.*;
+
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
@@ -74,5 +77,112 @@ class MerchantServiceTest {
         assertEquals("Phone Pay", result.get(0).getName());
         assertEquals(2L, result.get(1).getId());
         assertEquals("Paytm", result.get(1).getName());
+    }
+
+    @Test
+    void testGetMerchantById() {
+        // Step 1: Create Mock Data
+       Merchant merchant= new Merchant();
+        merchant.setId(1L);
+        merchant.setMerchantCode("paytm123");
+        merchant.setName("paytm");
+        merchant.setCallbackUrl("url1");
+
+        MerchantDTO merchantDTO= new MerchantDTO();
+        merchantDTO.setId(1L);
+        merchantDTO.setMerchantCode("paytm123");
+        merchantDTO.setName("paytm");
+        merchantDTO.setCallbackUrl("url1");
+
+        // Step 2: Mocking the Repository and Mapper
+        when(repository.findById(1L)).thenReturn(Optional.of(merchant));
+        when(merchantMapper.merchantToMerchantDto(merchant)).thenReturn(merchantDTO);
+
+        // Step 3: Call Service Method
+        MerchantDTO result =  merchantService.getMerchantByID(1L);
+
+        // Step 4: Assertions
+       assertEquals(1L, result.getId());
+        assertEquals("paytm", result.getName());
+    }
+
+    @Test
+    void testAddMerchantDetails() {
+        // Step 1: Create Mock Data
+        Merchant merchant= new Merchant();
+        merchant.setId(1L);
+        merchant.setMerchantCode("paytm123");
+        merchant.setName("paytm");
+        merchant.setCallbackUrl("url1");
+
+        MerchantDTO merchantDTO= new MerchantDTO();
+        merchantDTO.setId(1L);
+        merchantDTO.setMerchantCode("paytm123");
+        merchantDTO.setName("paytm");
+        merchantDTO.setCallbackUrl("url1");
+
+
+        // Step 2: Mocking the Repository and Mapper
+        when(repository.save(any(Merchant.class))).thenReturn(merchant);
+        when(merchantMapper.merchantToMerchantDto(merchant)).thenReturn(merchantDTO);
+
+        // Step 3: Call Service Method
+        Merchant result =  repository.save(merchant);
+        MerchantDTO md = merchantMapper.merchantToMerchantDto(result);
+
+        // Step 4: Assertions
+        assertEquals(1L, md.getId());
+        assertEquals("paytm", md.getName());
+    }
+
+
+    @Test
+    void testUpdateMerchantData() {
+        // Step 1: Create Mock Data
+        Merchant merchant= new Merchant();
+        merchant.setId(1L);
+        merchant.setMerchantCode("paytm123");
+        merchant.setName("paytm");
+        merchant.setCallbackUrl("url1");
+
+        Merchant updatedMerchant = new Merchant();
+        updatedMerchant.setId(1L);
+        updatedMerchant.setMerchantCode("paytm123");
+        updatedMerchant.setName("paytm");
+        updatedMerchant.setCallbackUrl("url1updated");
+
+        MerchantDTO merchantDTO= new MerchantDTO();
+        merchantDTO.setId(1L);
+        merchantDTO.setMerchantCode("paytm123");
+        merchantDTO.setName("paytm");
+        merchantDTO.setCallbackUrl("url1updated");
+
+        // Step 2: Mocking the Repository and Mapper
+        when(repository.findById(1L)).thenReturn(Optional.of(merchant));
+        when(repository.save(any(Merchant.class))).thenReturn(updatedMerchant);
+        when(merchantMapper.merchantToMerchantDto(updatedMerchant)).thenReturn(merchantDTO);
+
+        // Step 3: Call Service Method
+
+        MerchantDTO result =  merchantService.updateMerchantData(merchantDTO);
+
+        // Step 4: Assertions
+        assertEquals("url1updated", result.getCallbackUrl());
+        verify(repository, times(1)).save(any(Merchant.class));
+    }
+
+    @Test
+    void testDeleteMerchant(){
+
+        Merchant merchant= new Merchant();
+        merchant.setId(1L);
+        merchant.setMerchantCode("paytm123");
+        merchant.setName("paytm");
+        merchant.setCallbackUrl("url1");
+
+        when(repository.findById(1L)).thenReturn(Optional.of(merchant));
+        merchantService.deleteMerchant(1L);
+
+
     }
 }
