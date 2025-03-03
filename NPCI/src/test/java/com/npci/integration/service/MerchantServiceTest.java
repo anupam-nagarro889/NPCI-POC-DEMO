@@ -5,11 +5,15 @@ import com.npci.integration.dto.MerchantDTO;
 import com.npci.integration.mapper.MerchantMapper;
 import com.npci.integration.models.Merchant;
 import com.npci.integration.repository.MerchantRepository;
+import com.npci.integration.util.TestUtility;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
 import static org.mockito.Mockito.*;
 
 
@@ -30,38 +34,27 @@ class MerchantServiceTest {
     private MerchantMapper merchantMapper;
 
     @Mock
-    private RedisService redisService; // Mocked but not used in this test
+    private RedisService redisService;
 
     @InjectMocks
     private MerchantService merchantService;
 
+    TestUtility testUtility;
+
+    @BeforeEach
+    void setUp() {
+        testUtility = new TestUtility();
+    }
+
     @Test
     void testGetAllMerchant() {
         // Step 1: Create Mock Data
-        Merchant merchant1 = new Merchant();
-        Merchant merchant2 = new Merchant();
-        merchant1.setId(1L);
-        merchant1.setMerchantCode("PH123");
-        merchant1.setName("Phone Pay");
-        merchant1.setCallbackUrl("url1");
-
-        merchant2.setId(2L);
-        merchant2.setMerchantCode("PAYTM123");
-        merchant2.setName("Paytm");
-        merchant2.setCallbackUrl("url2");
+        Merchant merchant1 = testUtility.getMerchant(1L, "PH123", "Phone Pay", "url1");
+        Merchant merchant2 = testUtility.getMerchant(2L, "PAYTM123", "Paytm", "url2");
         List<Merchant> merchantList = Arrays.asList(merchant1, merchant2);
 
-        MerchantDTO merchantDTO1 = new MerchantDTO();
-        MerchantDTO merchantDTO2 = new MerchantDTO();
-        merchantDTO1.setId(1L);
-        merchantDTO1.setMerchantCode("PH123");
-        merchantDTO1.setName("Phone Pay");
-        merchantDTO1.setCallbackUrl("url1");
-
-        merchantDTO2.setId(2L);
-        merchantDTO2.setMerchantCode("PAYTM123");
-        merchantDTO2.setName("Paytm");
-        merchantDTO2.setCallbackUrl("url2");
+        MerchantDTO merchantDTO1 = testUtility.getMerchantDto(1L, "PH123", "Phone Pay", "url1");
+        MerchantDTO merchantDTO2 = testUtility.getMerchantDto(2L, "PAYTM123", "Paytm", "url2");
         List<MerchantDTO> merchantDTOList = Arrays.asList(merchantDTO1, merchantDTO2);
 
         // Step 2: Mock Repository and Mapper
@@ -82,17 +75,9 @@ class MerchantServiceTest {
     @Test
     void testGetMerchantById() {
         // Step 1: Create Mock Data
-       Merchant merchant= new Merchant();
-        merchant.setId(1L);
-        merchant.setMerchantCode("paytm123");
-        merchant.setName("paytm");
-        merchant.setCallbackUrl("url1");
+       Merchant merchant=  testUtility.getMerchant(1L, "paytm123", "paytm", "url1updated");
+        MerchantDTO merchantDTO = testUtility.getMerchantDto(1L, "paytm123", "paytm", "url1updated");
 
-        MerchantDTO merchantDTO= new MerchantDTO();
-        merchantDTO.setId(1L);
-        merchantDTO.setMerchantCode("paytm123");
-        merchantDTO.setName("paytm");
-        merchantDTO.setCallbackUrl("url1");
 
         // Step 2: Mocking the Repository and Mapper
         when(repository.findById(1L)).thenReturn(Optional.of(merchant));
@@ -109,18 +94,8 @@ class MerchantServiceTest {
     @Test
     void testAddMerchantDetails() {
         // Step 1: Create Mock Data
-        Merchant merchant= new Merchant();
-        merchant.setId(1L);
-        merchant.setMerchantCode("paytm123");
-        merchant.setName("paytm");
-        merchant.setCallbackUrl("url1");
-
-        MerchantDTO merchantDTO= new MerchantDTO();
-        merchantDTO.setId(1L);
-        merchantDTO.setMerchantCode("paytm123");
-        merchantDTO.setName("paytm");
-        merchantDTO.setCallbackUrl("url1");
-
+        Merchant merchant= testUtility.getMerchant(1L, "paytm123", "paytm", "url1");
+        MerchantDTO merchantDTO= testUtility.getMerchantDto(1L, "paytm123", "paytm", "url1");
 
         // Step 2: Mocking the Repository and Mapper
         when(repository.save(any(Merchant.class))).thenReturn(merchant);
@@ -139,23 +114,10 @@ class MerchantServiceTest {
     @Test
     void testUpdateMerchantData() {
         // Step 1: Create Mock Data
-        Merchant merchant= new Merchant();
-        merchant.setId(1L);
-        merchant.setMerchantCode("paytm123");
-        merchant.setName("paytm");
-        merchant.setCallbackUrl("url1");
+        Merchant merchant= testUtility.getMerchant(1L, "paytm123", "paytm", "url1");
+        Merchant updatedMerchant = testUtility.getMerchant(1L, "paytm123", "paytm", "url1updated");
 
-        Merchant updatedMerchant = new Merchant();
-        updatedMerchant.setId(1L);
-        updatedMerchant.setMerchantCode("paytm123");
-        updatedMerchant.setName("paytm");
-        updatedMerchant.setCallbackUrl("url1updated");
-
-        MerchantDTO merchantDTO= new MerchantDTO();
-        merchantDTO.setId(1L);
-        merchantDTO.setMerchantCode("paytm123");
-        merchantDTO.setName("paytm");
-        merchantDTO.setCallbackUrl("url1updated");
+        MerchantDTO merchantDTO=  testUtility.getMerchantDto(1L, "paytm123", "paytm", "url1updated");
 
         // Step 2: Mocking the Repository and Mapper
         when(repository.findById(1L)).thenReturn(Optional.of(merchant));
@@ -174,15 +136,10 @@ class MerchantServiceTest {
     @Test
     void testDeleteMerchant(){
 
-        Merchant merchant= new Merchant();
-        merchant.setId(1L);
-        merchant.setMerchantCode("paytm123");
-        merchant.setName("paytm");
-        merchant.setCallbackUrl("url1");
+        Merchant merchant = testUtility.getMerchant(1L, "paytm123", "paytm", "url1");
 
         when(repository.findById(1L)).thenReturn(Optional.of(merchant));
         merchantService.deleteMerchant(1L);
-
 
     }
 }
