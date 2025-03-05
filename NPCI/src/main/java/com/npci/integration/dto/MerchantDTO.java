@@ -2,6 +2,8 @@ package com.npci.integration.dto;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -12,4 +14,5 @@ public class MerchantDTO {
     private String merchantCode;
     private String name;
     private String callbackUrl;
+    private LocalDateTime createdAt;
 }

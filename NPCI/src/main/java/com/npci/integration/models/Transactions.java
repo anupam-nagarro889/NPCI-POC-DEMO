@@ -2,6 +2,7 @@ package com.npci.integration.models;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -44,8 +45,9 @@ public class Transactions implements Serializable {
     @Column(nullable = false, unique = true)
     private String referenceId;
 
+    @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private LocalDateTime initiatedAt = LocalDateTime.now();
+    private LocalDateTime initiatedAt ;
 
     private LocalDateTime completedAt;
 

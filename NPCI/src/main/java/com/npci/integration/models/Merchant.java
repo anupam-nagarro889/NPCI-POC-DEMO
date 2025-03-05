@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import java.io.Serializable;
 
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -35,7 +36,8 @@ public class Merchant implements Serializable {
 	@Column(nullable = false)
 	private String callbackUrl;
 
+	@CreationTimestamp
 	@Column(nullable = false, updatable = false)
-	private LocalDateTime createdAt = LocalDateTime.now();
+   	private LocalDateTime createdAt = LocalDateTime.now();
 }
 
