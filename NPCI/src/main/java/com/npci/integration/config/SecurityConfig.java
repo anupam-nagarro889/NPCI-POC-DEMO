@@ -30,7 +30,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable) // Correct way to disable CSRF in Spring Security 6.1+
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/rest/npci/auth/api/login", "/rest/npci/auth/api/register").permitAll()
+                        .requestMatchers("/rest/npci/auth-management/login", "/rest/npci/auth-management/register").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
