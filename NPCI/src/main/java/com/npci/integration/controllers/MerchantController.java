@@ -24,7 +24,7 @@ import com.npci.integration.service.RedisService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/rest/service/merchant/api")
+@RequestMapping("/rest/npci/merchant-management")
 @Slf4j
 public class MerchantController {
 
@@ -34,36 +34,36 @@ public class MerchantController {
 	@Autowired
 	private MerchantService merchantService;
 
-	@GetMapping("/getAllMerchants")
-	public List<MerchantDTO> getMerchants() {
+	@GetMapping("/merchants")
+	public ResponseEntity<List<MerchantDTO>> getMerchants() {
 		log.info("Returning all Merchants");
-		return merchantService.getAllMerchant();
+		return ResponseEntity.ok(merchantService.getAllMerchant());
 
 	}
 
-	@GetMapping("/getMerchant/{id}")
+	@GetMapping("/merchant/{id}")
 	public ResponseEntity<MerchantDTO> getMerchantById(@PathVariable(value = "id") Long id)
 			throws ResourceNotFoundException {
 		log.info("Getting Merchant by Id");
 		return ResponseEntity.ok(merchantService.getMerchantByID(id));
 	}
 
-	@PostMapping("/addMerchant")
-	public MerchantDTO addMerchant(@Valid @RequestBody MerchantDTO merchantDTO) {
+	@PostMapping("/merchant")
+	public ResponseEntity<MerchantDTO> addMerchant(@Valid @RequestBody MerchantDTO merchantDTO) {
 		log.info("Adding a new Merchant");
-		return merchantService.addMerchantDetails(merchantDTO);
+		return ResponseEntity.ok(merchantService.addMerchantDetails(merchantDTO));
 	}
 	
-	@PutMapping("/updateMerchant")
+	@PutMapping("/merchant")
 	public ResponseEntity<MerchantDTO> updateMerchantDetails(@Valid @RequestBody MerchantDTO merchantDTO) throws ResourceNotFoundException {
 		log.info("Updating a Merchant");
 		return ResponseEntity.ok(merchantService.updateMerchantData(merchantDTO));
 	}
 	
-	@DeleteMapping("/deleteMerchant/{id}")
-	public Map<String, Boolean> deleteMerchant(@PathVariable(value = "id") Long Id) throws ResourceNotFoundException {
+	@DeleteMapping("/merchant/{id}")
+	public ResponseEntity<Map<String, Boolean>> deleteMerchant(@PathVariable(value = "id") Long Id) throws ResourceNotFoundException {
 		log.info("Deleting a Merchant");
-		return merchantService.deleteMerchant(Id);
+		return ResponseEntity.ok(merchantService.deleteMerchant(Id));
 		
 	}
 

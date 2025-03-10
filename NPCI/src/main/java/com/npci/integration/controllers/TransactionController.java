@@ -7,13 +7,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
 
 @RestController
-@RequestMapping("/api/transactions")
+@RequestMapping("/rest/npci/transaction-management")
 @Slf4j
 public class TransactionController {
 
@@ -23,27 +21,27 @@ public class TransactionController {
         this.transactionService = transactionService;
     }
 
-    @PostMapping("/initiate")
+    @PostMapping("/transaction")
     public ResponseEntity<?> initiateTransaction(@RequestBody TransactionDTO transactionDTO) throws BadRequestException {
         log.info("Initiating a new transactions");
         return ResponseEntity.ok(transactionService.initiateTransaction(transactionDTO));
 
     }
 
-    @GetMapping("/getTransaction/{transactionId}")
+    @GetMapping("/transaction/{transactionId}")
     public ResponseEntity<TransactionDTO> getTransaction(@PathVariable String transactionId) {
         log.info("Fetching a transaction");
         return ResponseEntity.ok(transactionService.getTransaction(transactionId));
     }
 
-    @DeleteMapping("/deleteTransaction/{transactionId}")
+    @DeleteMapping("/transaction/{transactionId}")
     public ResponseEntity<String> deleteTransaction(@PathVariable String transactionId) {
         log.info("Deleting a transaction");
         transactionService.deleteTransaction(transactionId);
         return ResponseEntity.ok("Transaction deleted successfully");
     }
 
-    @GetMapping("/listTransactions")
+    @GetMapping("/transactions")
     public ResponseEntity<List<TransactionDTO>> listTransactions(){
         log.info("Listing transactions");
         return ResponseEntity.ok(transactionService.getAllTransactions());
